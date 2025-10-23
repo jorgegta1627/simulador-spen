@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulador SPEN</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Simulador de Examen SPEN</h1>
+
+    <label for="numPreguntas">¿Cuántas preguntas quieres?</label>
+    <input type="number" id="numPreguntas" min="1" max="150" value="80">
+
+    <h3>Cargar nuevas preguntas desde Excel</h3>
+    <input type="file" id="excelInput" accept=".xlsx" />
+    <p id="cargaStatus" style="font-weight: bold; color: green;"></p>
+    <hr>
+
+    <h3>Convertir archivo Excel a JSON</h3>
+    <input type="file" id="excelToJsonInput" accept=".xlsx" />
+    <button id="convertirJsonBtn">Convertir y descargar JSON</button>
+    <p id="jsonStatus" style="font-weight: bold; color: blue;"></p>
+    <hr>
+
+    <button id="generarBtn">Generar examen</button>
+    <div id="examen"></div>
+    <button id="finalizarBtn" style="display:none;">Finalizar examen</button>
+    <div id="resultado"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

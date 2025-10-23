@@ -1,0 +1,83 @@
+[
+    {
+      "id": "C-BASICA1-0001",
+      "module": "C",
+      "subarea": "1.1 Modelo constitucional",
+      "topic": "Fundamentos constitucionales del Estado mexicano",
+      "stem": "¿Cuál de los siguientes enunciados representa correctamente la forma de gobierno que adopta México según la Constitución?",
+      "options": [
+        "Monarquía parlamentaria y federal",
+        "República representativa, democrática, laica y federal",
+        "República centralista, teocrática y autoritaria",
+        "Estado unitario, absolutista y presidencial"
+      ],
+      "answer": 1,
+      "justification": "De acuerdo con el artículo 40 de la Constitución, México se constituye como una República representativa, democrática, laica y federal, compuesta por estados libres y soberanos en lo que concierne a su régimen interior.",
+      "reference": "Constitución Política de los Estados Unidos Mexicanos, Art. 40."
+    },
+    {
+      "id": "C-BASICA1-0002",
+      "module": "C",
+      "subarea": "1.1 Modelo constitucional",
+      "topic": "Soberanía y forma de gobierno",
+      "stem": "¿Qué artículo de la Constitución establece que la soberanía nacional reside esencial y originalmente en el pueblo?",
+      "options": [
+        "Artículo 39",
+        "Artículo 40",
+        "Artículo 41",
+        "Artículo 1"
+      ],
+      "answer": 0,
+      "justification": "El artículo 39 establece que la soberanía nacional reside esencial y originalmente en el pueblo, y que todo poder público dimana del pueblo y se instituye para beneficio de éste.",
+      "reference": "Constitución Política de los Estados Unidos Mexicanos, Art. 39."
+    },
+    {
+      "id": "C-BASICA1-0003",
+      "module": "C",
+      "subarea": "1.2 División de Poderes",
+      "topic": "Funciones del poder legislativo",
+      "stem": "¿Cuál es la función principal del poder legislativo federal en México?",
+      "options": [
+        "Interpretar las leyes",
+        "Aplicar sanciones",
+        "Expedir leyes",
+        "Administrar justicia"
+      ],
+      "answer": 2,
+      "justification": "La principal función del poder legislativo es expedir leyes, de acuerdo con la división de poderes establecida en la Constitución.",
+      "reference": "Constitución Política de los Estados Unidos Mexicanos, Art. 50."
+    },
+    {
+      "id": "C-BASICA1-0004",
+      "module": "C",
+      "subarea": "1.3 Derechos Humanos",
+      "topic": "Bloque de constitucionalidad",
+      "stem": "¿Qué documento, junto con la Constitución, forma parte del llamado bloque de constitucionalidad en materia de derechos humanos?",
+      "options": [
+        "El Código Penal Federal",
+        "Las leyes secundarias del Congreso",
+        "Los tratados internacionales firmados y ratificados por México",
+        "Los reglamentos de las dependencias federales"
+      ],
+      "answer": 2,
+      "justification": "El bloque de constitucionalidad en México incluye la Constitución y los tratados internacionales en materia de derechos humanos, como se establece en el artículo 1º.",
+      "reference": "Constitución Política de los Estados Unidos Mexicanos, Art. 1º."
+    },
+    {
+      "id": "C-BASICA1-0005",
+      "module": "C",
+      "subarea": "1.4 Principios constitucionales del sistema electoral",
+      "topic": "Principios rectores",
+      "stem": "¿Cuál NO es un principio rector del sistema electoral mexicano según la Constitución?",
+      "options": [
+        "Legalidad",
+        "Imparcialidad",
+        "Transparencia",
+        "Proporcionalidad"
+      ],
+      "answer": 3,
+      "justification": "Los principios rectores del sistema electoral incluyen legalidad, imparcialidad, objetividad, certeza, independencia y máxima publicidad. 'Proporcionalidad' no forma parte del listado constitucional.",
+      "reference": "Constitución Política de los Estados Unidos Mexicanos, Art. 41."
+    }
+  ]
+  
