@@ -8,12 +8,57 @@ const proporciones = {
   D: 0.20,
 };
 
-// Botón "Generar Examen"
+// Convertir archivo Excel a JSON y guardar en memoria
+document.getElementById('convertirJsonBtn').addEventListener('click', () => {
+  const input = document.getElementById('excelToJsonInput');
+  const file = input.files[0];
+  const status = document.getElementById('jsonStatus');
+
+  if (!file) {
+    status.innerHTML = `<span style="color: red;">❌ No se seleccionó ningún archivo.</span>`;
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+    const data = new Uint8Array(event.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    const nuevos = jsonData.map(r => ({
+      id: r.id,
+      module: r.module,
+      subarea: r.subarea,
+      topic: r.topic,
+      stem: r.pregunta || r.stem || '',
+      options: [r.A, r.B, r.C, r.D],
+      answer: parseInt(r.respuesta || r.answer),
+      justification: r.justificacion || r.justification || '',
+      reference: r.referencia || r.reference || ''
+    }));
+
+    reactivos = nuevos;
+
+    const blob = new Blob([JSON.stringify(reactivos, null, 2)], { type: "application/json" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "reactivos.json";
+    link.click();
+
+    status.innerHTML = `<span style="color: green;">✅ Se convirtió, descargó y cargó en memoria correctamente el archivo JSON.</span>`;
+  };
+
+  reader.readAsArrayBuffer(file);
+});
+
+// Generar examen
 document.getElementById('generarBtn').addEventListener('click', () => {
   const numPreguntas = parseInt(document.getElementById('numPreguntas').value);
 
   if (reactivos.length === 0) {
-    alert('❌ No hay reactivos cargados. Sube un archivo Excel o carga el JSON.');
+    alert('❌ No hay reactivos cargados. Convierte un archivo Excel primero.');
     return;
   }
 
@@ -25,7 +70,6 @@ document.getElementById('generarBtn').addEventListener('click', () => {
   resultadoDiv.innerHTML = '';
   seleccionadas = [];
 
-  // Agrupar por módulo
   const reactivosPorModulo = { A: [], B: [], C: [], D: [] };
   reactivos.forEach(r => {
     if (reactivosPorModulo[r.module]) {
@@ -33,7 +77,6 @@ document.getElementById('generarBtn').addEventListener('click', () => {
     }
   });
 
-  // Cuántos por módulo
   const seleccionadasPorModulo = {};
   let total = 0;
   for (let modulo in proporciones) {
@@ -52,7 +95,6 @@ document.getElementById('generarBtn').addEventListener('click', () => {
     }
   }
 
-  // Mostrar resumen
   const resumen = document.createElement('div');
   resumen.innerHTML = `
     <h3>Distribución del examen (${numPreguntas} preguntas):</h3>
@@ -63,7 +105,6 @@ document.getElementById('generarBtn').addEventListener('click', () => {
   `;
   examenDiv.appendChild(resumen);
 
-  // Selección aleatoria
   let todas = [];
   for (let modulo in seleccionadasPorModulo) {
     const cantidad = seleccionadasPorModulo[modulo];
@@ -109,7 +150,7 @@ document.getElementById('generarBtn').addEventListener('click', () => {
   finalizarBtn.style.display = 'inline-block';
 });
 
-// Botón "Finalizar"
+// Finalizar examen
 document.getElementById('finalizarBtn').addEventListener('click', () => {
   const resultadoDiv = document.getElementById('resultado');
   const contenedores = document.querySelectorAll('.reactivo');
@@ -135,100 +176,3 @@ document.getElementById('finalizarBtn').addEventListener('click', () => {
   resultadoDiv.innerHTML = `<h3>Obtuviste ${correctas} de ${seleccionadas.length} correctas (${Math.round((correctas / seleccionadas.length) * 100)}%).</h3>`;
   document.getElementById('finalizarBtn').style.display = 'none';
 });
-
-// Subir Excel para usar inmediatamente
-document.getElementById('excelInput').addEventListener('change', function (e) {
-  const file = e.target.files[0];
-  const status = document.getElementById('cargaStatus');
-
-  if (!file) {
-    status.textContent = '❌ No se seleccionó ningún archivo.';
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const data = new Uint8Array(event.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
-    const columnas = ['id', 'module', 'subarea', 'topic', 'stem', 'A', 'B', 'C', 'D', 'answer', 'justification', 'reference'];
-    const colsArchivo = Object.keys(jsonData[0] || {});
-    const faltantes = columnas.filter(col => !colsArchivo.includes(col));
-    if (faltantes.length > 0) {
-      status.textContent = `❌ Faltan columnas: ${faltantes.join(', ')}`;
-      return;
-    }
-
-    const nuevos = jsonData.map(r => ({
-      id: r.id,
-      module: r.module,
-      subarea: r.subarea,
-      topic: r.topic,
-      stem: r.stem,
-      options: [r.A, r.B, r.C, r.D],
-      answer: parseInt(r.answer),
-      justification: r.justification,
-      reference: r.reference
-    }));
-
-    reactivos = reactivos.concat(nuevos);
-    status.textContent = `✅ Se cargaron ${nuevos.length} reactivos del archivo Excel.`;
-  };
-
-  reader.readAsArrayBuffer(file);
-});
-
-// Convertir Excel a JSON descargable
-document.getElementById('convertirJsonBtn').addEventListener('click', () => {
-    const input = document.getElementById('excelToJsonInput');
-    const status = document.getElementById('jsonStatus');
-  
-    if (!input.files.length) {
-      status.textContent = '❌ No has seleccionado un archivo.';
-      return;
-    }
-  
-    const file = input.files[0];
-    const reader = new FileReader();
-  
-    reader.onload = function (event) {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-  
-      const columnasEsperadas = ['ID', 'Módulo', 'Subárea', 'Tema', 'Pregunta (stem)', 'A', 'B', 'C', 'D', 'Respuesta Correcta', 'Justificación', 'Referencia'];
-      const columnasArchivo = Object.keys(jsonData[0] || {});
-      const faltantes = columnasEsperadas.filter(col => !columnasArchivo.includes(col));
-  
-      if (faltantes.length > 0) {
-        status.textContent = `❌ Faltan columnas: ${faltantes.join(', ')}`;
-        return;
-      }
-  
-      const convertidos = jsonData.map(r => ({
-        id: r.id,
-        module: r.module,
-        subarea: r.subarea,
-        topic: r.topic,
-        stem: r.stem,
-        options: [r.A, r.B, r.C, r.D],
-        answer: parseInt(r.answer),
-        justification: r.justification,
-        reference: r.reference
-      }));
-  
-      const blob = new Blob([JSON.stringify(convertidos, null, 2)], { type: "application/json" });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `reactivos_generados_${Date.now()}.json`;
-      link.click();
-  
-      status.textContent = `✅ Se convirtió y descargó el archivo JSON correctamente.`;
-    };
-  
-    reader.readAsArrayBuffer(file);
-  });
-  
