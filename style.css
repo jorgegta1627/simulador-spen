@@ -261,14 +261,62 @@ button, .reactivo, .section {
 
 /* ====== RESPONSIVO ====== */
 @media (max-width: 768px) {
-  .container {
-    padding: 25px;
+  body {
+    font-size: 16px;
   }
+
   header {
     flex-direction: column;
     text-align: center;
+    padding: 15px;
   }
+
   header h1 {
     margin-bottom: 10px;
+  }
+
+  .container {
+    width: 94%;
+    margin: 20px auto;
+    padding: 25px 18px;
+  }
+
+  button {
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  input[type="number"],
+  select {
+    width: 100%;
+  }
+
+  .acciones-principales,
+  .selector,
+  .parametro {
+    text-align: center;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* ====== AJUSTE AVANZADO PARA MÓVILES ====== */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+  .container {
+    padding: 18px 14px;
+  }
+  label, input, button {
+    font-size: 1rem;
+  }
+  #resultado {
+    font-size: 14px;
+    padding: 12px;
   }
 }
