@@ -6,22 +6,51 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <header>
+    <div class="toolbar">
+      <label for="excelToJsonInput" class="upload-label">📁 Convertir Excel a JSON</label>
+      <input type="file" id="excelToJsonInput" accept=".xlsx" hidden />
+      <button id="convertirJsonBtn" class="small-btn">Convertir</button>
+      <span id="jsonStatus" class="status-text"></span>
+    </div>
+  </header>
+
+  <main class="container">
     <h1>Simulador de Examen SPEN</h1>
 
-    <label for="numPreguntas">¿Cuántas preguntas quieres?</label>
-    <input type="number" id="numPreguntas" min="1" max="150" value="80">
-    <h3>Convertir archivo Excel a JSON</h3>
-    <input type="file" id="excelToJsonInput" accept=".xlsx" />
-    <button id="convertirJsonBtn">Convertir y descargar JSON</button>
-    <p id="jsonStatus" style="font-weight: bold; color: blue;"></p>
-    <hr>
+    <section class="selector">
+      <h3>Selecciona el tipo de examen:</h3>
+      <label><input type="radio" name="tipoExamen" value="completo" checked> Examen completo (todos los módulos)</label><br>
+      <label><input type="radio" name="tipoExamen" value="modulo"> Examen por módulo específico</label>
+    </section>
 
-    <button id="generarBtn">Generar examen</button>
+    <div id="numPreguntasDiv" class="parametro">
+      <label for="numPreguntas">Número de preguntas (máx. 150):</label>
+      <input type="number" id="numPreguntas" min="1" max="150" value="80">
+    </div>
+
+    <div id="seleccionModulo" class="parametro" style="display:none;">
+      <h3>Selecciona el módulo:</h3>
+      <label><input type="radio" name="moduloSeleccionado" value="A" checked> Módulo A</label><br>
+      <label><input type="radio" name="moduloSeleccionado" value="B"> Módulo B</label><br>
+      <label><input type="radio" name="moduloSeleccionado" value="C"> Módulo C</label><br>
+      <label><input type="radio" name="moduloSeleccionado" value="D"> Módulo D</label>
+    </div>
+
+    <div class="acciones-principales">
+      <button id="generarBtn" class="main-btn">Generar examen</button>
+      <button id="limpiarPantallaBtn" class="secondary-btn">🧹 Limpiar pantalla</button>
+    </div>
+
     <div id="examen"></div>
-    <button id="finalizarBtn" style="display:none;">Finalizar examen</button>
+
+    <div class="acciones">
+      <button id="calificarBtn" class="main-btn" style="display:none;">Calificar examen</button>
+      <button id="finalizarBtn" class="secondary-btn" style="display:none;">Finalizar examen</button>
+    </div>
+
     <div id="resultado"></div>
-  </div>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="script.js"></script>

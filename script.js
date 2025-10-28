@@ -1,53 +1,88 @@
 let reactivos = [];
 let seleccionadas = [];
 
-const proporciones = {
-  A: 0.40,
-  B: 0.20,
-  C: 0.20,
-  D: 0.20,
-};
+// Proporciones y cantidades oficiales
+const proporciones = { A: 0.4, B: 0.2, C: 0.2, D: 0.2 };
+const preguntasPorModulo = { A: 60, B: 30, C: 30, D: 30 };
 
-// Convertir archivo Excel a JSON y guardar en memoria
-document.getElementById('convertirJsonBtn').addEventListener('click', () => {
+// Mostrar u ocultar opciones según tipo
+document.querySelectorAll('input[name="tipoExamen"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    const tipo = e.target.value;
+    document.getElementById('numPreguntasDiv').style.display = tipo === 'completo' ? 'block' : 'none';
+    document.getElementById('seleccionModulo').style.display = tipo === 'modulo' ? 'block' : 'none';
+  });
+});
+
+// Cargar reactivos automáticamente
+fetch("reactivos.json")
+  .then(res => {
+    if (!res.ok) throw new Error("No encontrado");
+    return res.json();
+  })
+  .then(data => {
+    reactivos = data.map(r => {
+      const letra = (r.answer || "").toString().trim().toUpperCase();
+      const indice = letra === "A" ? 0 : letra === "B" ? 1 : letra === "C" ? 2 : letra === "D" ? 3 : Number(r.answer) || 0;
+      return { ...r, answer: indice };
+    });
+    document.getElementById('jsonStatus').textContent = `✅ ${reactivos.length} reactivos cargados`;
+  })
+  .catch(() => console.warn("⚠️ No se encontró reactivos.json"));
+
+// Convertir Excel → JSON
+document.getElementById('convertirJsonBtn').addEventListener('click', async () => {
   const input = document.getElementById('excelToJsonInput');
-  const file = input.files[0];
   const status = document.getElementById('jsonStatus');
 
-  if (!file) {
-    status.innerHTML = `<span style="color: red;">❌ No se seleccionó ningún archivo.</span>`;
+  if (!input.files.length) {
+    status.textContent = '❌ Selecciona un archivo Excel primero';
     return;
   }
 
+  const file = input.files[0];
   const reader = new FileReader();
 
-  reader.onload = function (event) {
-    const data = new Uint8Array(event.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  reader.onload = async function (event) {
+    try {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-    const nuevos = jsonData.map(r => ({
-      id: r.id,
-      module: r.module,
-      subarea: r.subarea,
-      topic: r.topic,
-      stem: r.pregunta || r.stem || '',
-      options: [r.A, r.B, r.C, r.D],
-      answer: parseInt(r.respuesta || r.answer),
-      justification: r.justificacion || r.justification || '',
-      reference: r.referencia || r.reference || ''
-    }));
+      const reactivosConvertidos = jsonData.map((r, i) => {
+        const limpiar = (t) => (t ? String(t).replace(/\s+/g, " ").trim() : "");
+        const letra = (r["Respuesta Correcta"] || "").toString().trim().toUpperCase();
+        const indice = letra === "A" ? 0 : letra === "B" ? 1 : letra === "C" ? 2 : letra === "D" ? 3 : 0;
 
-    reactivos = nuevos;
+        return {
+          id: r["ID"] || `EXCEL-${Date.now()}-${i}`,
+          module: r["Módulo"] || "",
+          subarea: limpiar(r["Subárea"]),
+          topic: limpiar(r["Tema"]),
+          stem: limpiar(r["Pregunta (stem)"]),
+          options: [limpiar(r["A"]), limpiar(r["B"]), limpiar(r["C"]), limpiar(r["D"])],
+          answer: indice,
+          justification: limpiar(r["Justificación"]),
+          reference: limpiar(r["Referencia"])
+        };
+      });
 
-    const blob = new Blob([JSON.stringify(reactivos, null, 2)], { type: "application/json" });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = "reactivos.json";
-    link.click();
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: "reactivos.json",
+        types: [{ description: "Archivo JSON", accept: { "application/json": [".json"] } }]
+      });
 
-    status.innerHTML = `<span style="color: green;">✅ Se convirtió, descargó y cargó en memoria correctamente el archivo JSON.</span>`;
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(reactivosConvertidos, null, 2));
+      await writable.close();
+
+      reactivos = reactivosConvertidos;
+      status.textContent = `✅ ${reactivos.length} reactivos convertidos y guardados correctamente.`;
+    } catch (e) {
+      console.error(e);
+      status.textContent = '❌ Error al convertir o guardar';
+    }
   };
 
   reader.readAsArrayBuffer(file);
@@ -55,124 +90,113 @@ document.getElementById('convertirJsonBtn').addEventListener('click', () => {
 
 // Generar examen
 document.getElementById('generarBtn').addEventListener('click', () => {
+  const tipo = document.querySelector('input[name="tipoExamen"]:checked').value;
   const numPreguntas = parseInt(document.getElementById('numPreguntas').value);
-
-  if (reactivos.length === 0) {
-    alert('❌ No hay reactivos cargados. Convierte un archivo Excel primero.');
-    return;
-  }
-
   const examenDiv = document.getElementById('examen');
-  const finalizarBtn = document.getElementById('finalizarBtn');
   const resultadoDiv = document.getElementById('resultado');
+  const calificarBtn = document.getElementById('calificarBtn');
+  const finalizarBtn = document.getElementById('finalizarBtn');
 
   examenDiv.innerHTML = '';
   resultadoDiv.innerHTML = '';
   seleccionadas = [];
 
+  if (!reactivos.length) return alert('❌ No hay reactivos cargados.');
+
   const reactivosPorModulo = { A: [], B: [], C: [], D: [] };
   reactivos.forEach(r => {
-    if (reactivosPorModulo[r.module]) {
-      reactivosPorModulo[r.module].push(r);
-    }
+    if (reactivosPorModulo[r.module]) reactivosPorModulo[r.module].push(r);
   });
 
-  const seleccionadasPorModulo = {};
-  let total = 0;
-  for (let modulo in proporciones) {
-    let cantidad = Math.round(numPreguntas * proporciones[modulo]);
-    seleccionadasPorModulo[modulo] = cantidad;
-    total += cantidad;
-  }
-
-  if (total !== numPreguntas) {
-    let diferencia = numPreguntas - total;
-    const orden = Object.keys(proporciones).sort((a, b) => proporciones[b] - proporciones[a]);
-    for (let i = 0; diferencia !== 0 && i < orden.length; i++) {
-      const m = orden[i];
-      seleccionadasPorModulo[m] += diferencia > 0 ? 1 : -1;
-      diferencia += diferencia > 0 ? -1 : 1;
-    }
-  }
-
-  const resumen = document.createElement('div');
-  resumen.innerHTML = `
-    <h3>Distribución del examen (${numPreguntas} preguntas):</h3>
-    <ul>
-      ${Object.entries(seleccionadasPorModulo).map(([modulo, cantidad]) =>
-        `<li>Módulo ${modulo}: ${cantidad} preguntas</li>`).join('')}
-    </ul>
-  `;
-  examenDiv.appendChild(resumen);
-
   let todas = [];
-  for (let modulo in seleccionadasPorModulo) {
-    const cantidad = seleccionadasPorModulo[modulo];
-    const barajadas = reactivosPorModulo[modulo].sort(() => 0.5 - Math.random()).slice(0, cantidad);
-    todas = todas.concat(barajadas);
+  let resumen = "";
+
+  if (tipo === "completo") {
+    const seleccionadasPorModulo = {};
+    for (let m in proporciones) {
+      let cantidad = Math.round(numPreguntas * proporciones[m]);
+      const disponibles = reactivosPorModulo[m] || [];
+      const barajadas = disponibles.sort(() => 0.5 - Math.random()).slice(0, cantidad);
+      todas = todas.concat(barajadas);
+      seleccionadasPorModulo[m] = barajadas.length;
+    }
+
+    resumen = Object.entries(seleccionadasPorModulo)
+      .map(([m, c]) => `<li>Módulo ${m}: ${c} preguntas</li>`).join('');
+  } else {
+    const mod = document.querySelector('input[name="moduloSeleccionado"]:checked').value;
+    const disponibles = reactivosPorModulo[mod] || [];
+    const cantidad = preguntasPorModulo[mod];
+    todas = disponibles.sort(() => 0.5 - Math.random()).slice(0, cantidad);
+    resumen = `<li>Módulo ${mod}: ${todas.length} preguntas</li>`;
   }
 
   todas = todas.sort(() => 0.5 - Math.random());
   seleccionadas = todas;
 
-  todas.forEach((reactivo, index) => {
-    const contenedor = document.createElement('div');
-    contenedor.classList.add('reactivo');
+  examenDiv.innerHTML = `<h3>Distribución:</h3><ul>${resumen}</ul>`;
 
-    const etiqueta = document.createElement('p');
-    etiqueta.style.fontSize = "0.9em";
-    etiqueta.style.color = "#555";
-    etiqueta.innerHTML = `<strong>[Módulo ${reactivo.module}]</strong> ${reactivo.subarea} — <em>${reactivo.topic}</em>`;
-    contenedor.appendChild(etiqueta);
+  todas.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.classList.add('reactivo');
 
-    const pregunta = document.createElement('p');
-    pregunta.textContent = `${index + 1}. ${reactivo.stem}`;
-    contenedor.appendChild(pregunta);
+    let html = `<p><strong>[Módulo ${r.module}]</strong> ${r.subarea} — <em>${r.topic}</em></p>`;
+    html += `<p>${i + 1}. ${r.stem}</p>`;
+    html += r.options.map((op, j) =>
+      op && op.trim()
+        ? `<label><input type="radio" name="pregunta-${i}" value="${j}"> ${String.fromCharCode(65 + j)}. ${op}</label><br>`
+        : ''
+    ).join('');
 
-    const opcionesDiv = document.createElement('div');
-    opcionesDiv.classList.add('opciones');
-
-    reactivo.options.forEach((opcion, i) => {
-      const label = document.createElement('label');
-      const input = document.createElement('input');
-      input.type = 'radio';
-      input.name = `pregunta-${index}`;
-      input.value = i;
-      label.appendChild(input);
-      label.append(` ${String.fromCharCode(65 + i)}. ${opcion}`);
-      opcionesDiv.appendChild(label);
-    });
-
-    contenedor.appendChild(opcionesDiv);
-    examenDiv.appendChild(contenedor);
+    div.innerHTML = html;
+    examenDiv.appendChild(div);
   });
 
+  calificarBtn.style.display = 'inline-block';
   finalizarBtn.style.display = 'inline-block';
 });
 
-// Finalizar examen
-document.getElementById('finalizarBtn').addEventListener('click', () => {
+// Calificar examen
+document.getElementById('calificarBtn').addEventListener('click', () => {
   const resultadoDiv = document.getElementById('resultado');
   const contenedores = document.querySelectorAll('.reactivo');
   let correctas = 0;
 
-  contenedores.forEach((contenedor, index) => {
-    const seleccion = contenedor.querySelector(`input[name="pregunta-${index}"]:checked`);
-    const reactivo = seleccionadas[index];
-    const justificacion = document.createElement('div');
-    justificacion.classList.add('justificacion');
-
+  contenedores.forEach((cont, i) => {
+    const seleccion = cont.querySelector(`input[name="pregunta-${i}"]:checked`);
+    const reactivo = seleccionadas[i];
     if (seleccion && parseInt(seleccion.value) === reactivo.answer) {
       correctas++;
-      justificacion.innerHTML = `<strong>✅ Correcto.</strong><br>${reactivo.justification}<br><em>${reactivo.reference}</em>`;
+      cont.style.borderLeft = '5px solid green';
     } else {
-      justificacion.innerHTML = `<strong>❌ Incorrecto.</strong><br>Respuesta correcta: <strong>${String.fromCharCode(65 + reactivo.answer)}</strong><br>${reactivo.justification}<br><em>${reactivo.reference}</em>`;
+      cont.style.borderLeft = '5px solid red';
+      const just = document.createElement('div');
+      just.classList.add('justificacion');
+      just.innerHTML = `
+        <strong>❌ Incorrecto.</strong><br>
+        Respuesta correcta: <strong>${String.fromCharCode(65 + reactivo.answer)}</strong><br>
+        ${reactivo.justification}<br><em>${reactivo.reference}</em>`;
+      cont.appendChild(just);
     }
-
-    contenedor.appendChild(justificacion);
-    justificacion.style.display = 'block';
   });
 
   resultadoDiv.innerHTML = `<h3>Obtuviste ${correctas} de ${seleccionadas.length} correctas (${Math.round((correctas / seleccionadas.length) * 100)}%).</h3>`;
+});
+
+// Finalizar examen
+document.getElementById('finalizarBtn').addEventListener('click', () => {
+  document.getElementById('examen').innerHTML = '';
+  document.getElementById('resultado').innerHTML = '';
+  document.getElementById('calificarBtn').style.display = 'none';
   document.getElementById('finalizarBtn').style.display = 'none';
+  seleccionadas = [];
+});
+
+// 🔹 Limpiar solo la pantalla (sin borrar reactivos cargados)
+document.getElementById('limpiarPantallaBtn').addEventListener('click', () => {
+  document.getElementById('examen').innerHTML = '';
+  document.getElementById('resultado').innerHTML = '';
+  document.getElementById('calificarBtn').style.display = 'none';
+  document.getElementById('finalizarBtn').style.display = 'none';
+  seleccionadas = [];
 });
