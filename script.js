@@ -50,24 +50,120 @@ document.getElementById('convertirJsonBtn').addEventListener('click', async () =
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
+      // 🔄 Conversión y limpieza de cada reactivo del archivo Excel
       const reactivosConvertidos = jsonData.map((r, i) => {
-        const limpiar = (t) => (t ? String(t).replace(/\s+/g, " ").trim() : "");
-        const letra = (r["Respuesta Correcta"] || "").toString().trim().toUpperCase();
-        const indice = letra === "A" ? 0 : letra === "B" ? 1 : letra === "C" ? 2 : letra === "D" ? 3 : 0;
+        const limpiar = (t) => {
+          if (t === null || t === undefined) return "";
+          return String(t).replace(/\s+/g, " ").trim();
+        };
 
+        const letra = (r["Respuesta Correcta"] || "").toString().trim().toUpperCase();
+        const indice =
+          letra === "A" ? 0 :
+          letra === "B" ? 1 :
+          letra === "C" ? 2 :
+          letra === "D" ? 3 : 0;
+
+      // 🧠 Limpieza avanzada del texto de la pregunta
+      let stem = limpiar(r["Pregunta (stem)"]);
+
+      // ======================================================
+      // 🔍 DETECCIÓN AVANZADA DE LISTAS Y RELACIONES
+      // ======================================================
+
+      // Si contiene tanto números como letras, se trata de una relación combinada
+      if (stem.match(/\d+\.\s*[A-Za-zÁÉÍÓÚáéíóú(]/) && stem.match(/[a-d]\)\s*[A-Za-zÁÉÍÓÚáéíóú(]/i)) {
+        // --- Extraer parte introductoria antes del primer número ---
+        const introMatch = stem.match(/^.*?(?=\d+\.\s*[A-Za-zÁÉÍÓÚáéíóú(])/);
+        const intro = introMatch ? introMatch[0].trim() : "";
+
+        // --- Separar la parte numérica ---
+        const numerica = stem.match(/(\d+\.\s*[^a-d]+?)(?=[a-d]\)|$)/gi);
+        let listaNumerica = "";
+        if (numerica && numerica.length > 0) {
+          const itemsNum = numerica.map(txt => txt.replace(/\d+\.\s*/, "").trim());
+          listaNumerica = `<ol>${itemsNum.map(p => `<li>${p}</li>`).join("")}</ol>`;
+        }
+
+        // --- Separar la parte de letras ---
+        const letras = stem.split(/(?=[a-d]\))/i).map(p => p.trim()).filter(p => /^[a-d]\)/i.test(p));
+        let tablaLetras = "";
+        if (letras && letras.length > 0) {
+          const filas = letras
+            .map(p => {
+              const letra = p.substring(0, 2).replace(")", "").trim().toUpperCase();
+              const texto = p.substring(2).trim();
+              return `<tr><td><strong>${letra})</strong></td><td>${texto}</td></tr>`;
+            })
+            .join("");
+          tablaLetras = `<table class="tabla-relacion"><tbody>${filas}</tbody></table>`;
+        }
+
+        stem = `${intro}<br>${listaNumerica}${tablaLetras}`;
+      }
+
+      // Si solo hay números (1., 2., 3.)
+      else if (stem.match(/\d+\.\s*[A-Za-zÁÉÍÓÚáéíóú(]/)) {
+        const partes = stem.split(/(?=\d+\.\s*)/g).map(p => p.trim()).filter(Boolean);
+        if (partes.length > 1) {
+          const primerIndice = stem.search(/\d+\.\s*/);
+          const intro = primerIndice > 0 ? stem.slice(0, primerIndice).trim() : "";
+          const lista = partes
+            .map(p => p.replace(/^\d+\.\s*/, ""))
+            .map(p => `<li>${p}</li>`)
+            .join("");
+          stem = `${intro}<br><ol>${lista}</ol>`;
+        }
+      }
+
+      // Si solo hay letras (a), b), c))
+      else if (stem.match(/[a-d]\)\s*[A-Za-zÁÉÍÓÚáéíóú(]/i)) {
+        const textoBase = stem.split(/[a-d]\)/i)[0].trim();
+        const bloques = stem
+          .split(/(?=[a-d]\))/i)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+
+        if (bloques.length > 1) {
+          const filas = bloques
+            .map(p => {
+              const letra = p.substring(0, 2).replace(")", "").trim().toUpperCase();
+              const texto = p.substring(2).trim();
+              return `<tr><td><strong>${letra})</strong></td><td>${texto}</td></tr>`;
+            })
+            .join("");
+          stem = `${textoBase}<br><table class="tabla-relacion"><tbody>${filas}</tbody></table>`;
+        }
+      }
+
+
+
+        const contieneRelacion = /(relacion|columna|correspon|asocie)/i.test(stem);
+        const contieneOrden = /(ordene|secuencia|pasos|etapa|cronol|procedimiento)/i.test(stem);
+
+        // 🧾 Construcción del objeto reactivo
         return {
-          id: r["ID"] || `EXCEL-${Date.now()}-${i}`,
-          module: r["Módulo"] || "",
+          id: i + 1,
+          module: limpiar(r["Módulo"]),
           subarea: limpiar(r["Subárea"]),
           topic: limpiar(r["Tema"]),
-          stem: limpiar(r["Pregunta (stem)"]),
-          options: [limpiar(r["A"]), limpiar(r["B"]), limpiar(r["C"]), limpiar(r["D"])],
+          stem: stem,
+          options: [
+            limpiar(r["A"]),
+            limpiar(r["B"]),
+            limpiar(r["C"]),
+            limpiar(r["D"])
+          ].filter(Boolean),
           answer: indice,
           justification: limpiar(r["Justificación"]),
-          reference: limpiar(r["Referencia"])
+          reference: limpiar(r["Referencia"]),
+          type:
+            contieneRelacion ? "relacionar" :
+            contieneOrden ? "ordenar" : "normal"
         };
       });
 
+      // 💾 Guardar archivo JSON
       const fileHandle = await window.showSaveFilePicker({
         suggestedName: "reactivos.json",
         types: [{ description: "Archivo JSON", accept: { "application/json": [".json"] } }]
