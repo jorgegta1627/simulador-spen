@@ -1,75 +1,274 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  margin: 0;
-  padding: 0;
+/* ==========================================
+   🎓 SIMULADOR SPEN — ESTILO PROFESIONAL
+   ========================================== */
+
+/* ====== TIPOGRAFÍA Y BASE ====== */
+:root {
+  --color-fondo: #f5f6fa;
+  --color-primario: #004080;
+  --color-secundario: #7a003c;
+  --color-acento: #0066cc;
+  --color-texto: #333;
+  --color-claro: #fafafa;
+  --color-borde: #ddd;
+  --radio: 8px;
+  --sombra-suave: 0 4px 14px rgba(0,0,0,0.08);
 }
 
-.container {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
+body {
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--color-fondo);
+  margin: 0;
+  padding: 0;
+  color: var(--color-texto);
+  line-height: 1.6;
+}
+
+/* ====== ENCABEZADO ====== */
+header {
+  background: linear-gradient(90deg, var(--color-primario), #0055a5);
+  color: white;
+  padding: 18px 35px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
+header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.3px;
+  font-weight: 600;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+header img {
+  height: 42px;
+  filter: brightness(0) invert(1);
 }
 
-input[type="number"] {
-  width: 100px;
-  padding: 5px;
-  margin-bottom: 20px;
+/* ====== CONTENEDOR PRINCIPAL ====== */
+.container {
+  max-width: 950px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-suave);
+  padding: 40px 50px;
+  animation: fadeIn 0.6s ease;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2, h3 {
+  color: var(--color-primario);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* ====== SECCIONES Y TARJETAS ====== */
+.section {
+  background-color: var(--color-claro);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 20px 25px;
+  margin-bottom: 25px;
+  transition: box-shadow 0.3s;
+}
+
+.section:hover {
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+
+/* ====== ENTRADAS Y SELECTORES ====== */
+input[type="number"],
+input[type="file"],
+select {
+  border: 1px solid #ccc;
+  border-radius: var(--radio);
+  padding: 8px 12px;
+  font-size: 15px;
+  width: 230px;
+  transition: all 0.3s;
+}
+
+input[type="number"]:focus,
+input[type="file"]:focus,
+select:focus {
+  border-color: var(--color-acento);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,102,204,0.15);
+}
+
+/* ====== BOTONES ====== */
 button {
-  background-color: #6b46c1;
-  color: white;
   border: none;
-  padding: 10px 15px;
-  margin: 10px 0;
-  border-radius: 5px;
+  border-radius: var(--radio);
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 16px;
+  margin: 8px 6px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 button:hover {
-  background-color: #553c9a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
+button.primary {
+  background-color: var(--color-secundario);
+  color: #fff;
+}
+
+button.primary:hover {
+  background-color: #9b004d;
+}
+
+button.secondary {
+  background-color: var(--color-primario);
+  color: #fff;
+}
+
+button.secondary:hover {
+  background-color: var(--color-acento);
+}
+
+/* ====== BLOQUES DE REACTIVOS ====== */
 .reactivo {
-  background: #f9f9f9;
-  padding: 15px;
-  border-left: 4px solid #6b46c1;
-  margin: 15px 0;
-  border-radius: 5px;
+  background: #fff;
+  border-left: 5px solid var(--color-primario);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  border-radius: var(--radio);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  transition: border-left 0.3s ease;
 }
 
-.opciones label {
+.reactivo:hover {
+  border-left: 5px solid var(--color-secundario);
+}
+
+.reactivo p {
+  margin: 6px 0;
+}
+
+.reactivo strong {
+  color: var(--color-primario);
+}
+
+/* ====== OPCIONES DE RESPUESTA ====== */
+.reactivo label {
   display: block;
-  margin-bottom: 5px;
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  background: #f7f9fb;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.resultado {
-  font-weight: bold;
-  margin-top: 10px;
+.reactivo label:hover {
+  background-color: #eef5ff;
 }
 
+/* ====== JUSTIFICACIÓN ====== */
 .justificacion {
-  display: none;
+  background: #fff8f8;
+  border-left: 4px solid #cc0000;
+  padding: 12px 15px;
   margin-top: 10px;
-  color: #555;
-  font-size: 0.95em;
-  background: #eef;
-  padding: 10px;
-  border-left: 4px solid #00f;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #661a1a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* ====== TABLAS DE RELACIÓN ====== */
+.tabla-relacion {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.tabla-relacion td {
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  vertical-align: top;
+}
+
+.tabla-relacion td:first-child {
+  width: 60px;
+  text-align: center;
+  font-weight: bold;
+  background-color: #eef3f9;
+  color: var(--color-primario);
+}
+
+/* ====== PANEL DE ESTADO ====== */
+#jsonStatus {
+  background: #eef6ff;
+  border: 1px solid #c9e0ff;
+  color: #003366;
+  padding: 10px 14px;
+  border-radius: var(--radio);
+  font-weight: 500;
+  margin-top: 8px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* ====== RESULTADO ====== */
+#resultado {
+  margin-top: 25px;
+  background-color: #f2fbf2;
+  border-left: 5px solid #3c763d;
+  padding: 18px;
+  border-radius: var(--radio);
+  color: #2b542c;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: var(--sombra-suave);
+}
+
+/* ====== FOOTER ====== */
+footer {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  padding: 25px 0;
+  margin-top: 50px;
+  border-top: 1px solid #ddd;
+}
+
+/* ====== ANIMACIONES SUTILES ====== */
+button, .reactivo, .section {
+  transition: all 0.3s ease;
+}
+
+.reactivo input[type="radio"]:checked + label {
+  background-color: #e9f3ff;
+  border-left: 4px solid var(--color-acento);
+}
+
+/* ====== RESPONSIVO ====== */
+@media (max-width: 768px) {
+  .container {
+    padding: 25px;
+  }
+  header {
+    flex-direction: column;
+    text-align: center;
+  }
+  header h1 {
+    margin-bottom: 10px;
+  }
 }
